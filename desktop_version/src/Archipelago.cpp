@@ -14,6 +14,7 @@
 #include <queue>
 #include <string>
 #include <chrono>
+#include <cstdlib>
 
 #define ADD_TO_MSGQUEUE(x,y) messageQueue.push(std::pair<std::string,int>(x,y))
 
@@ -23,6 +24,7 @@ int v6mw_player_id;
 std::string v6mw_player_name;
 std::string v6mw_ip;
 std::string v6mw_passwd;
+int v6mw_uuid = 0;
 int trinketsCollected = 0;
 int trinketsPending = 0;
 bool deathlinkstat = false;
@@ -44,6 +46,9 @@ void V6MW_Init(std::string ip, std::string player_name, std::string passwd) {
     if (init) {
         return;
     }
+
+    std::srand(std::time(nullptr)); // use current time as seed for random generator
+
     v6mw_player_name = player_name;
     v6mw_ip = ip;
     v6mw_passwd = passwd;
@@ -148,11 +153,12 @@ bool parse_response(std::string msg, std::string &request) {
         if (!strcmp(cmd,"RoomInfo")) {
             if (!auth) {
                 Json::Value req_t;
+                v6mw_uuid = std::rand();
                 req_t[i]["cmd"] = "Connect";
                 req_t[i]["game"] = "VVVVVV";
                 req_t[i]["name"] = v6mw_player_name;
                 req_t[i]["password"] = v6mw_passwd;
-                req_t[i]["uuid"] = "1234";
+                req_t[i]["uuid"] = v6mw_uuid;
                 req_t[i]["tags"][0] = "DeathLink"; // Send Tag even though we don't know if we want these packages, just in case
                 req_t[i]["version"]["major"] = "0";
                 req_t[i]["version"]["minor"] = "2";
