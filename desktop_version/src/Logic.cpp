@@ -1,3 +1,4 @@
+#include "Archipelago.h"
 #include "Credits.h"
 #include "Entity.h"
 #include "Enums.h"
@@ -352,8 +353,16 @@ void gamelogic(void)
 
     graphics.kludgeswnlinewidth = false;
 
-    if (game.deathseq != -1)
+    if (game.deathseq != -1 || V6MW_DeathLinkRecv())
     {
+
+        if (V6MW_DeathLinkRecv() && game.deathseq == -1) { // They died
+            game.deathseq = 30;
+            V6MW_DeathLinkClear();
+        } else if (!V6MW_DeathLinkRecv() && game.deathseq == 30) { // We died
+            V6MW_DeathLinkSend();
+        }
+
         if (map.towermode)
         {
             map.colsuperstate = 1;

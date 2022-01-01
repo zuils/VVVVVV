@@ -6,6 +6,7 @@
 #include <string.h>
 #include <tinyxml2.h>
 
+#include "Archipelago.h"
 #include "Constants.h"
 #include "CustomLevels.h"
 #include "DeferCallbacks.h"
@@ -738,6 +739,12 @@ void Game::updatestate(void)
                 /* Prevent softlocks if there's no cutscene running right now */
                 hascontrol = true;
                 completestop = false;
+
+                if (V6MW_RecvItem()) { //Receive Items from Archipelago
+                    state = 1000;
+                } else { // If not, we can show the next message
+                    V6MW_PrintNext();
+                }
             }
             break;
         case 1:
@@ -1827,6 +1834,8 @@ void Game::updatestate(void)
             break;
 
         case 1000:
+            if(music.currentsong!=-1) music.silencedasmusik();
+            music.playef(3);
             graphics.showcutscenebars = true;
             hascontrol = false;
             completestop = true;
@@ -1851,7 +1860,7 @@ void Game::updatestate(void)
             else
 #endif
             {
-                graphics.createtextboxflipme(" " + help.number_words(trinkets()) + " out of Twenty ", 50, 135, 174, 174, 174);
+                graphics.createtextboxflipme(" " + help.number_words(trinkets()+1) + " out of Twenty ", 50, 135, 174, 174, 174);
                 graphics.textboxcenterx();
             }
             break;
@@ -1873,6 +1882,7 @@ void Game::updatestate(void)
                 music.fadeMusicVolumeIn(3000);
             }
             graphics.showcutscenebars = false;
+            V6MW_RecvClear(); // Clear one item
             break;
 
         case 1010:
@@ -2592,6 +2602,7 @@ void Game::updatestate(void)
         case 3501:
             //Game complete!
             unlockAchievement("vvvvvvgamecomplete");
+            V6MW_StoryComplete();
             unlocknum(5);
             crewstats[0] = true;
             state++;
@@ -6626,15 +6637,7 @@ void Game::resetgameclock(void)
 
 int Game::trinkets(void)
 {
-    int temp = 0;
-    for (size_t i = 0; i < SDL_arraysize(obj.collect); i++)
-    {
-        if (obj.collect[i])
-        {
-            temp++;
-        }
-    }
-    return temp;
+    return V6MW_GetTrinkets();
 }
 
 int Game::crewmates(void)

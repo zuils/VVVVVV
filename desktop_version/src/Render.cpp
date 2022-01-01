@@ -1,5 +1,6 @@
 #include <SDL.h>
 
+#include "Archipelago.h"
 #include "Constants.h"
 #include "Credits.h"
 #include "CustomLevels.h"
@@ -2221,7 +2222,7 @@ void maprender(void)
 
           if(map.showtrinkets){
             for(size_t i=0; i<map.shinytrinkets.size(); i++){
-              if(!obj.collect[i]){
+              if(!V6MW_Locations()[i]){
                 int temp = 1086;
                 if(graphics.flipmode) temp += 3;
                 if(map.customzoom==4){
@@ -2315,7 +2316,7 @@ void maprender(void)
             {
                 for (size_t i = 0; i < map.shinytrinkets.size(); i++)
                 {
-                    if (!obj.collect[i])
+                    if (!V6MW_Locations()[i])
                     {
                         int temp = 1086;
                         if (graphics.flipmode) temp += 3;
@@ -2800,7 +2801,7 @@ void teleporterrender(void)
     {
         for (size_t i = 0; i < map.shinytrinkets.size(); i++)
         {
-            if (!obj.collect[i])
+            if (!V6MW_Locations()[i])
             {
                 temp = 1086;
                 if (graphics.flipmode) temp += 3;

@@ -30,7 +30,7 @@ else()
     set(CMAKE_C_STANDARD 90)
     set(CMAKE_C_EXTENSIONS OFF)
 
-    set(CMAKE_CXX_STANDARD 98)
+    set(CMAKE_CXX_STANDARD 11)
     set(CMAKE_CXX_EXTENSIONS OFF)
 endif()
 
@@ -76,6 +76,7 @@ endif()
 
 # Source Lists
 set(VVV_SRC
+    src/Archipelago.cpp
     src/BinaryBlob.cpp
     src/BlockV.cpp
     src/Ent.cpp
@@ -145,6 +146,8 @@ if(BUNDLE_DEPENDENCIES)
         ../third_party/physfs/extras
         ../third_party/lodepng
         ../third_party/utfcpp/source
+        ../third_party/IXWebSocket
+        ../third_party/jsoncpp/include
     )
 else()
     target_include_directories(
@@ -154,6 +157,11 @@ else()
         ../third_party/physfs/extras
     )
 endif()
+
+# Required for WebSocket connection
+add_subdirectory(../third_party/IXWebSocket ixwebout)
+# Required for Message Parsing
+add_subdirectory(../third_party/jsoncpp jsoncppout)
 
 if(MAKEANDPLAY)
     target_compile_definitions(VVVVVV PRIVATE -DMAKEANDPLAY)
@@ -298,7 +306,7 @@ if(BUNDLE_DEPENDENCIES)
         set_property(TARGET physfs-static PROPERTY C_EXTENSIONS ON)
     endif()
 
-    target_link_libraries(VVVVVV physfs-static tinyxml2-static lodepng-static)
+    target_link_libraries(VVVVVV physfs-static tinyxml2-static lodepng-static ixwebsocket jsoncpp_static)
 else()
     find_package(utf8cpp CONFIG)
 

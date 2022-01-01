@@ -4,6 +4,7 @@
 #include <emscripten/html5.h>
 #endif
 
+#include "Archipelago.h"
 #include "CustomLevels.h"
 #include "DeferCallbacks.h"
 #include "Editor.h"
@@ -371,6 +372,10 @@ int main(int argc, char *argv[])
     char* baseDir = NULL;
     char* assetsPath = NULL;
 
+    //V6MW
+    std::string ip, name, passwd;
+    bool enable_deathlink;
+
     vlog_init();
 
     for (int i = 1; i < argc; ++i)
@@ -470,6 +475,24 @@ int main(int argc, char *argv[])
         {
             vlog_toggle_error(0);
         }
+        else if (ARG("-v6mw_name"))
+        {
+            ARG_INNER({
+                name = argv[i+1]; i++;
+            })
+        }
+        else if (ARG("-v6mw_ip"))
+        {
+            ARG_INNER({
+                ip = argv[i+1]; i++;
+            })
+        }
+        else if (ARG("-v6mw_passwd"))
+        {
+            ARG_INNER({
+                passwd = argv[i+1]; i++;
+            })
+        }
 #undef ARG_INNER
 #undef ARG
         else
@@ -477,6 +500,11 @@ int main(int argc, char *argv[])
             vlog_error("Error: invalid option: %s", argv[i]);
             VVV_exit(1);
         }
+    }
+
+    if (name == "" || ip == "") {
+        vlog_error("V6MW: Name or IP unset. Exiting");
+        VVV_exit(1);
     }
 
     if(!FILESYSTEM_init(argv[0], baseDir, assetsPath))
@@ -538,6 +566,8 @@ int main(int argc, char *argv[])
     graphics.init();
 
     game.init();
+
+    V6MW_Init(ip,name,passwd);
 
     // This loads music too...
     if (!graphics.reloadresources())
