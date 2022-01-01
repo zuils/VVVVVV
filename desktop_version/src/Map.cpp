@@ -1,6 +1,7 @@
 #define MAP_DEFINITION
 #include "Map.h"
 
+#include "v6ap.h"
 #include "Constants.h"
 #include "CustomLevels.h"
 #include "Entity.h"
@@ -911,6 +912,8 @@ void mapclass::warpto(int rx, int ry , int t, int tx, int ty)
 
 void mapclass::gotoroom(int rx, int ry)
 {
+    V6AP_RoomAvailable(&rx,&ry);
+
     int roomchangedir;
     std::vector<entclass> linecrosskludge;
 
