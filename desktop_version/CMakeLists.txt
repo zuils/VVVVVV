@@ -66,6 +66,7 @@ endif()
 
 # Source Lists
 set(VVV_SRC
+    src/v6ap.cpp
     src/BinaryBlob.cpp
     src/BlockV.cpp
     src/CWrappers.cpp
@@ -139,6 +140,7 @@ if(BUNDLE_DEPENDENCIES)
         ../third_party/utfcpp/source
         ../third_party/FAudio/include
         ../third_party/FAudio/src
+        ../third_party/APCpp
     )
 else()
     target_include_directories(
@@ -149,6 +151,9 @@ else()
         ../third_party/FAudio/src
     )
 endif()
+
+# Required for WebSocket connection
+add_subdirectory(../third_party/APCpp apcppout)
 
 if(MAKEANDPLAY)
     target_compile_definitions(VVVVVV PRIVATE -DMAKEANDPLAY)
@@ -275,7 +280,7 @@ else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 
     string(REGEX REPLACE "-std=[a-z0-9+]+" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++98")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
     # Disable exceptions
     string(REPLACE "-fexceptions" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -307,7 +312,7 @@ if(BUNDLE_DEPENDENCIES)
         ../third_party/FAudio/include
     )
 
-    target_link_libraries(VVVVVV physfs-static tinyxml2-static lodepng-static faudio-static)
+    target_link_libraries(VVVVVV physfs-static tinyxml2-static lodepng-static faudio-static APCpp)
 else()
     find_package(utf8cpp CONFIG)
 

@@ -4,6 +4,7 @@
 #include <emscripten/html5.h>
 #endif
 
+#include "v6ap.h"
 #include "CustomLevels.h"
 #include "DeferCallbacks.h"
 #include "Editor.h"
@@ -367,6 +368,9 @@ int main(int argc, char *argv[])
     char* baseDir = NULL;
     char* assetsPath = NULL;
 
+    //V6AP
+    std::string ip = "", name = "", passwd = "", ap_file = "";
+
     vlog_init();
 
     for (int i = 1; i < argc; ++i)
@@ -474,6 +478,30 @@ int main(int argc, char *argv[])
         {
             vlog_toggle_error(0);
         }
+        else if (ARG("-v6ap_name"))
+        {
+            ARG_INNER({
+                name = argv[i+1]; i++;
+            })
+        }
+        else if (ARG("-v6ap_ip"))
+        {
+            ARG_INNER({
+                ip = argv[i+1]; i++;
+            })
+        }
+        else if (ARG("-v6ap_passwd"))
+        {
+            ARG_INNER({
+                passwd = argv[i+1]; i++;
+            })
+        }
+        else if (ARG("-v6ap_file"))
+        {
+            ARG_INNER({
+                ap_file = argv[i+1]; i++;
+            })
+        }
 #undef ARG_INNER
 #undef ARG
         else
@@ -481,6 +509,11 @@ int main(int argc, char *argv[])
             vlog_error("Error: invalid option: %s", argv[i]);
             VVV_exit(1);
         }
+    }
+
+    if (name == "" && ap_file == "") {
+        vlog_error("V6AP: You need to at least specify Name (For MultiWorld) or Seed Filename (For Singleplayer). Exiting.");
+        VVV_exit(1);
     }
 
     if(!FILESYSTEM_init(argv[0], baseDir, assetsPath))
@@ -542,6 +575,12 @@ int main(int argc, char *argv[])
     graphics.init();
 
     game.init();
+
+    if (ap_file != "") {
+        V6AP_Init(ap_file.c_str());
+    } else {
+        V6AP_Init(ip.c_str(),name.c_str(),passwd.c_str());
+    }
 
     // This loads music too...
     if (!graphics.reloadresources())
