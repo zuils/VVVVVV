@@ -374,7 +374,6 @@ int main(int argc, char *argv[])
 
     //V6MW
     std::string ip, name, passwd;
-    bool enable_deathlink;
 
     vlog_init();
 

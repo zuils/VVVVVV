@@ -15,6 +15,8 @@
 #include <string>
 #include <chrono>
 
+#define ADD_TO_MSGQUEUE(x,y) messageQueue.push(std::pair<std::string,int>(x,y))
+
 bool init = false;
 bool auth = false;
 int v6mw_player_id;
@@ -25,9 +27,11 @@ int trinketsCollected = 0;
 int trinketsPending = 0;
 bool deathlinkstat = false;
 bool enable_deathlink = false;
-std::string location_strings[V6MW_NUM_CHECKS];
 bool location_checks[V6MW_NUM_CHECKS];
-std::queue<std::string> messageQueue;
+std::queue<std::pair<std::string,int>> messageQueue;
+std::map<int, std::string> map_player_id_name;
+std::map<int, std::string> map_location_id_name;
+std::map<int, std::string> map_item_id_name;
 
 ix::WebSocket webSocket;
 Json::Reader reader;
@@ -149,11 +153,7 @@ bool parse_response(std::string msg, std::string &request) {
                 req_t[i]["name"] = v6mw_player_name;
                 req_t[i]["password"] = v6mw_passwd;
                 req_t[i]["uuid"] = "1234";
-                if (enable_deathlink) {
-                    req_t[i]["tags"][0] = "DeathLink";
-                } else {
-                    req_t[i]["tags"] = "";
-                }
+                req_t[i]["tags"][0] = "DeathLink"; // Send Tag even though we don't know if we want these packages, just in case
                 req_t[i]["version"]["major"] = "0";
                 req_t[i]["version"]["minor"] = "2";
                 req_t[i]["version"]["build"] = "2";
@@ -163,6 +163,13 @@ bool parse_response(std::string msg, std::string &request) {
                 return true;
             }
         } else if (!strcmp(cmd,"Connected")) {
+            // Avoid inconsistency if we disconnected before
+            trinketsCollected = 0;
+            trinketsPending = 0;
+            for (int i = 0; i < V6MW_NUM_CHECKS; i++) {
+                location_checks[i] = false;
+            }
+
             vlog_info("V6MW: Authenticated");
             v6mw_player_id = root[i]["slot"].asInt();
             for (uint j = 0; j < root[i]["checked_locations"].size(); j++) {
@@ -172,33 +179,57 @@ bool parse_response(std::string msg, std::string &request) {
                 vlog_debug("V6MW: Archipelago reports Trinket %d as checked.", loc_id);
             }
             vlog_debug("V6MW: %d total already checked.", root[i]["checked_locations"].size());
+            for (uint j = 0; j < root[i]["players"].size(); j++) {
+                map_player_id_name.insert(std::pair<int,std::string>(root[i]["players"][j]["slot"].asInt(),root[i]["players"][j]["alias"].asString()));
+            }
             enable_deathlink = root[i]["slot_data"]["DeathLink"].asBool();
             if (enable_deathlink) vlog_info("V6MW: Enabled DeathLink.");
-            auth = true;
+            Json::Value req_t;
+            req_t[0]["cmd"] = "GetDataPackage";
+            request = writer.write(req_t);
+            return true;
+        } else if (!strcmp(cmd,"DataPackage")) {
+            for (uint j = 0; j < root[i]["data"]["games"].size(); j++) {
+                for (auto itr : root[i]["data"]["games"]) {
+                    for (auto itr2 : itr["item_name_to_id"].getMemberNames()) {
+                        map_item_id_name.insert(std::pair<int,std::string>(itr["item_name_to_id"][itr2.c_str()].asInt(), itr2));
+                    }
+                    for (auto itr2 : itr["location_name_to_id"].getMemberNames()) {
+                        map_location_id_name.insert(std::pair<int,std::string>(itr["location_name_to_id"][itr2.c_str()].asInt(), itr2));
+                    }
+                }
+            }
+            vlog_debug("V6MW: Built Data Maps.");
             Json::Value req_t;
             req_t[0]["cmd"] = "Sync";
             request = writer.write(req_t);
+            auth = true;
             return true;
         } else if (!strcmp(cmd,"Print")) {
             vlog_info("AP: %s", root[i]["text"].asCString());
-            messageQueue.push(root[i]["text"].asString());
+            ADD_TO_MSGQUEUE(root[i]["text"].asString(), 0);
         } else if (!strcmp(cmd,"PrintJSON")) {
-            std::string out("");
-            for (uint j = 0; j < root[i]["data"].size(); j++) {
-                if (!strcmp(root[i]["data"][j].get("type","").asCString(),"player_id")) {
-                    out += root[i]["data"][j]["text"].asString();
-                }
-                out += root[i]["data"][j].get("text","").asString();
+            vlog_debug("Received PrintJSON");
+            if (!strcmp(root[i].get("type","").asCString(),"ItemSend")) {
+                ADD_TO_MSGQUEUE(map_item_id_name.at(root[i]["item"]["item"].asInt()) + " was sent!", 2);
+                ADD_TO_MSGQUEUE("Sender: " + map_player_id_name.at(root[i]["item"]["player"].asInt()), 1);
+                ADD_TO_MSGQUEUE("Receiving: " + map_player_id_name.at(root[i]["receiving"].asInt()), 0);
+                vlog_info("Item from %s to %s", map_player_id_name.at(root[i]["item"]["player"].asInt()).c_str(), map_player_id_name.at(root[i]["receiving"].asInt()).c_str());
+            } else if(!strcmp(root[i].get("type","").asCString(),"Hint")) {
+                std:: string prompt("Hint Received. Item: " + map_item_id_name.at(root[i]["item"]["item"].asInt()));
+                ADD_TO_MSGQUEUE(prompt, 4);
+                ADD_TO_MSGQUEUE("Item From: " + map_player_id_name.at(root[i]["item"]["player"].asInt()), 3);
+                ADD_TO_MSGQUEUE("Item To: " + map_player_id_name.at(root[i]["receiving"].asInt()), 2);
+                ADD_TO_MSGQUEUE("Location: " + map_location_id_name.at(root[i]["item"]["location"].asInt()), 1);
+                ADD_TO_MSGQUEUE((root[i]["found"].asBool() ? " (Checked)" : " (Unchecked)"), 0);
+                vlog_info("Hint: Item %s from %s to %s at %s %s", map_item_id_name.at(root[i]["item"]["item"].asInt()).c_str(), map_player_id_name.at(root[i]["item"]["player"].asInt()).c_str(),
+                                                                  map_player_id_name.at(root[i]["receiving"].asInt()).c_str(), map_location_id_name.at(root[i]["item"]["location"].asInt()).c_str(),
+                                                                  (root[i]["found"].asBool() ? " (Checked)" : " (Unchecked)"));
             }
-            vlog_info("AP: %s", out.c_str());
-            messageQueue.push(out);
         } else if (!strcmp(cmd, "LocationInfo")) {
             //Uninteresting for now.
         } else if (!strcmp(cmd, "ReceivedItems")) {
-            for (uint j = 0; j < root[i]["items"].size(); j++) {
-                int item_id = root[i]["items"][j]["item"].asInt() - 2515000;
-                trinketsPending++;
-            }
+            trinketsPending += root[i]["items"].size();
         } else if (!strcmp(cmd, "RoomUpdate")) {
             for (uint j = 0; j < root[i]["checked_locations"].size(); j++) {
                 //Sync checks with server
@@ -219,7 +250,7 @@ bool parse_response(std::string msg, std::string &request) {
                     if (!strcmp(root[i]["data"]["source"].asCString(), v6mw_player_name.c_str())) break; // We already paid our penance
                     deathlinkstat = true;
                     std::string out = root[i]["data"]["source"].asString() + " killed you ;-;";
-                    messageQueue.push(out);
+                    ADD_TO_MSGQUEUE(out, 0);
                     vlog_info(("V6MW: " + out).c_str());
                     break;
                 }
@@ -244,11 +275,12 @@ const bool* V6MW_Locations() {
 
 void V6MW_PrintNext() {
     if (messageQueue.empty()) return;
-    if (graphics.flipmode) {
-        graphics.createtextbox(messageQueue.front(), -1, 25, 174, 174, 174);
-    } else {
-        graphics.createtextbox(messageQueue.front(), -7, -7, 174, 174, 174);
+    graphics.createtextbox(messageQueue.front().first, -7, -7, 174, 174, 174);
+    int amount = messageQueue.front().second;
+    messageQueue.pop();
+    for (int i = 0; i < amount; i++) {
+        graphics.addline(messageQueue.front().first);
+        messageQueue.pop();
     }
     graphics.textboxtimer(60);
-    messageQueue.pop();
 }
