@@ -155,7 +155,7 @@ void V6MW_DeathLinkSend() {
 bool parse_response(std::string msg, std::string &request) {
     Json::Value root;
     reader.parse(msg, root);
-    for (uint i = 0; i < root.size(); i++) {
+    for (unsigned int i = 0; i < root.size(); i++) {
         const char* cmd = root[0]["cmd"].asCString();
         if (!strcmp(cmd,"RoomInfo")) {
             if (!auth) {
@@ -185,14 +185,14 @@ bool parse_response(std::string msg, std::string &request) {
 
             vlog_info("V6MW: Authenticated");
             v6mw_player_id = root[i]["slot"].asInt();
-            for (uint j = 0; j < root[i]["checked_locations"].size(); j++) {
+            for (unsigned int j = 0; j < root[i]["checked_locations"].size(); j++) {
                 //Sync checks with server
                 int loc_id = root[i]["checked_locations"][j].asInt() - 2515000;
                 location_checks[loc_id] = true;
                 vlog_debug("V6MW: Archipelago reports Trinket %d as checked.", loc_id);
             }
             vlog_debug("V6MW: %d total already checked.", root[i]["checked_locations"].size());
-            for (uint j = 0; j < root[i]["players"].size(); j++) {
+            for (unsigned int j = 0; j < root[i]["players"].size(); j++) {
                 map_player_id_name.insert(std::pair<int,std::string>(root[i]["players"][j]["slot"].asInt(),root[i]["players"][j]["alias"].asString()));
             }
             enable_deathlink = root[i]["slot_data"]["DeathLink"].asBool();
@@ -204,7 +204,7 @@ bool parse_response(std::string msg, std::string &request) {
             request = writer.write(req_t);
             return true;
         } else if (!strcmp(cmd,"DataPackage")) {
-            for (uint j = 0; j < root[i]["data"]["games"].size(); j++) {
+            for (unsigned int j = 0; j < root[i]["data"]["games"].size(); j++) {
                 for (auto itr : root[i]["data"]["games"]) {
                     for (auto itr2 : itr["item_name_to_id"].getMemberNames()) {
                         map_item_id_name.insert(std::pair<int,std::string>(itr["item_name_to_id"][itr2.c_str()].asInt(), itr2));
@@ -246,7 +246,7 @@ bool parse_response(std::string msg, std::string &request) {
         } else if (!strcmp(cmd, "ReceivedItems")) {
             trinketsPending += root[i]["items"].size();
         } else if (!strcmp(cmd, "RoomUpdate")) {
-            for (uint j = 0; j < root[i]["checked_locations"].size(); j++) {
+            for (unsigned int j = 0; j < root[i]["checked_locations"].size(); j++) {
                 //Sync checks with server
                 int loc_id = root[i]["checked_locations"][j].asInt() - 2515000;
                 location_checks[loc_id] = true;
@@ -259,7 +259,7 @@ bool parse_response(std::string msg, std::string &request) {
         } else if (!strcmp(cmd, "Bounced")) {
             // Only expected Packages are DeathLink Packages. RIP
             if (!enable_deathlink) continue;
-            for (uint j = 0; j < root[i]["tags"].size(); j++) {
+            for (unsigned int j = 0; j < root[i]["tags"].size(); j++) {
                 if (!strcmp(root[i]["tags"][j].asCString(), "DeathLink")) {
                     // Suspicions confirmed ;-; But maybe we died, not them?
                     if (!strcmp(root[i]["data"]["source"].asCString(), v6mw_player_name.c_str())) break; // We already paid our penance

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Entity.h"
 #include <queue>
 #define V6MW_NUM_CHECKS 20
