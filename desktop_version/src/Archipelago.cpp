@@ -29,6 +29,8 @@ int trinketsCollected = 0;
 int trinketsPending = 0;
 bool deathlinkstat = false;
 bool enable_deathlink = false;
+int deathlink_amnesty = 0;
+int cur_deathlink_amnesty = 0;
 bool location_checks[V6MW_NUM_CHECKS];
 std::queue<std::pair<std::string,int>> messageQueue;
 std::map<int, std::string> map_player_id_name;
@@ -131,10 +133,15 @@ bool V6MW_DeathLinkRecv() {
 
 void V6MW_DeathLinkClear() {
     deathlinkstat = false;
+    cur_deathlink_amnesty = deathlink_amnesty;
 }
 
 void V6MW_DeathLinkSend() {
-    if (auth) {
+    if (cur_deathlink_amnesty > 0) {
+        cur_deathlink_amnesty--;
+        return;
+    }
+    if (auth && enable_deathlink) {
         std::chrono::time_point<std::chrono::system_clock> timestamp = std::chrono::system_clock::now();
         Json::Value req_t;
         req_t[0]["cmd"] = "Bounce";
@@ -189,6 +196,8 @@ bool parse_response(std::string msg, std::string &request) {
                 map_player_id_name.insert(std::pair<int,std::string>(root[i]["players"][j]["slot"].asInt(),root[i]["players"][j]["alias"].asString()));
             }
             enable_deathlink = root[i]["slot_data"]["DeathLink"].asBool();
+            deathlink_amnesty = root[i]["slot_data"]["DeathLink_Amnesty"].asInt();
+            cur_deathlink_amnesty = deathlink_amnesty;
             if (enable_deathlink) vlog_info("V6MW: Enabled DeathLink.");
             Json::Value req_t;
             req_t[0]["cmd"] = "GetDataPackage";
