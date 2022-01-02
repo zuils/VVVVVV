@@ -18,6 +18,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+      with:
+        submodules: 'true'
 
     - name: Install dependencies
       run: brew install ninja sdl2 sdl2_mixer
@@ -28,41 +30,16 @@ jobs:
         cmake -GNinja ..
     - name: Build (default version)
       run: ninja -C ${SRC_DIR_PATH}/build
-
-    - name: CMake configure (official)
-      run: |
-        cd ${SRC_DIR_PATH}/build
-        cmake -DOFFICIAL_BUILD=ON ..
-    - name: Build (official)
-      run: |
-        ninja -C ${SRC_DIR_PATH}/build
-
-    - name: CMake configure (M&P)
-      run: |
-        cd ${SRC_DIR_PATH}/build
-        cmake -DOFFICIAL_BUILD=OFF -DMAKEANDPLAY=ON ..
-    - name: Build (M&P)
-      run: ninja -C ${SRC_DIR_PATH}/build
-
-    - name: CMake configure (no custom levels)
-      run: |
-        cd ${SRC_DIR_PATH}/build
-        cmake -DMAKEANDPLAY=OFF -DCUSTOM_LEVEL_SUPPORT=DISABLED ..
-    - name: Build (no custom levels)
-      run: ninja -C ${SRC_DIR_PATH}/build
-
-    - name: CMake configure (no editor)
-      run: |
-        cd ${SRC_DIR_PATH}/build
-        cmake -DCUSTOM_LEVEL_SUPPORT=NO_EDITOR ..
-    - name: Build (no editor)
-      run: ninja -C ${SRC_DIR_PATH}/build
+    - name: Create Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: v6mw-macos
+        path: ${{env.SRC_DIR_PATH}}/build/VVVVVV
 
   build-lin:
-    name: Build (CentOS 7)
+    name: Build (ubuntu-latest)
 
     runs-on: ubuntu-latest
-    container: ghcr.io/infoteddy/vvvvvv-build@sha256:3f55f514d9418479de1f5240f88a25095fefcd333aa1323f04fe8530ff26d10f
 
     env:
       CXXFLAGS: -I/usr/local/include/SDL2
@@ -70,6 +47,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+      with:
+        submodules: 'true'
+
+    - name: Install libsdl2-mixer-dev
+      run: sudo apt-get install -y libsdl2-mixer-dev
 
     - name: CMake configure (default version)
       run: |
@@ -77,35 +59,11 @@ jobs:
         cmake ..
     - name: Build (default version)
       run: make -j $(nproc) -C ${SRC_DIR_PATH}/build
-
-    - name: CMake configure (official)
-      run: |
-        cd ${SRC_DIR_PATH}/build
-        cmake -DOFFICIAL_BUILD=ON ..
-    - name: Build (official)
-      run: |
-        make -j $(nproc) -C ${SRC_DIR_PATH}/build
-
-    - name: CMake configure (M&P)
-      run: |
-        cd ${SRC_DIR_PATH}/build
-        cmake -DOFFICIAL_BUILD=OFF -DMAKEANDPLAY=ON ..
-    - name: Build (M&P)
-      run: make -j $(nproc) -C ${SRC_DIR_PATH}/build
-
-    - name: CMake configure (no custom levels)
-      run: |
-        cd ${SRC_DIR_PATH}/build
-        cmake -DMAKEANDPLAY=OFF -DCUSTOM_LEVEL_SUPPORT=DISABLED ..
-    - name: Build (no custom levels)
-      run: make -j $(nproc) -C ${SRC_DIR_PATH}/build
-
-    - name: CMake configure (no editor)
-      run: |
-        cd ${SRC_DIR_PATH}/build
-        cmake -DCUSTOM_LEVEL_SUPPORT=NO_EDITOR ..
-    - name: Build (no editor)
-      run: make -j $(nproc) -C ${SRC_DIR_PATH}/build
+    - name: Create Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: v6mw-linux
+        path: ${{env.SRC_DIR_PATH}}/build/VVVVVV
 
   build-win:
     name: Build (windows-latest)
@@ -114,6 +72,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+      with:
+        submodules: 'true'
 
     - name: Install dependencies (Windows)
       run: |
@@ -121,49 +81,24 @@ jobs:
 
     - name: CMake configure (default version)
       run: |
-        cd $env:SRC_DIR_PATH
+        mkdir $env:SRC_DIR_PATH/build
+        cd $env:SRC_DIR_PATH/build
         $env:LDFLAGS =  "/LIBPATH:$env:VCPKG_INSTALLATION_ROOT\installed\x86-windows\lib "
         $env:LDFLAGS += "/LIBPATH:$env:VCPKG_INSTALLATION_ROOT\installed\x86-windows\lib\manual-link"
         cmake -G "Visual Studio 16 2019" -A Win32 `
               -DSDL2_INCLUDE_DIRS="$env:VCPKG_INSTALLATION_ROOT\installed\x86-windows\include\SDL2" `
-              -DSDL2_LIBRARIES="SDL2;SDL2main;SDL2_mixer" .
+              -DSDL2_LIBRARIES="SDL2;SDL2main;SDL2_mixer" `
+              -DUSE_ZLIB=OFF `
+              -DCMAKE_BUILD_TYPE=Release ..
     - name: Build (default version)
       run: |
-        cd $env:SRC_DIR_PATH
-        cmake --build .
+        cd $env:SRC_DIR_PATH/build
+        cmake --build . --config Release
+    - name: bruh
+      run: ls -l ${{env.SRC_DIR_PATH}}/build/
+    - name: Create Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: v6mw-win
+        path: ${{env.SRC_DIR_PATH}}/build/Release/VVVVVV.exe
 
-    - name: CMake configure (official)
-      run: |
-        cd $env:SRC_DIR_PATH
-        cmake -DOFFICIAL_BUILD=ON .
-    - name: Build (official)
-      run: |
-        cd $env:SRC_DIR_PATH
-        cmake --build .
-
-    - name: CMake configure (M&P)
-      run: |
-        cd $env:SRC_DIR_PATH
-        cmake -DOFFICIAL_BUILD=OFF -DMAKEANDPLAY=ON .
-    - name: Build (M&P)
-      run: |
-        cd $env:SRC_DIR_PATH
-        cmake --build .
-
-    - name: CMake configure (no custom levels)
-      run: |
-        cd $env:SRC_DIR_PATH
-        cmake -DMAKEANDPLAY=OFF -DCUSTOM_LEVEL_SUPPORT=DISABLED .
-    - name: Build (no custom levels)
-      run: |
-        cd $env:SRC_DIR_PATH
-        cmake --build .
-
-    - name: CMake configure (no editor)
-      run: |
-        cd $env:SRC_DIR_PATH
-        cmake -DCUSTOM_LEVEL_SUPPORT=NO_EDITOR .
-    - name: Build (no editor)
-      run: |
-        cd $env:SRC_DIR_PATH
-        cmake --build .
