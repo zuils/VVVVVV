@@ -93,12 +93,14 @@ void V6MW_Init(std::string ip, std::string player_name, std::string passwd) {
 }
 
 void V6MW_SendItem(int idx) {
-    if (trinketsCollected >= V6MW_NUM_CHECKS || idx >= V6MW_NUM_CHECKS || location_checks[idx]) {
+    if (trinketsCollected > V6MW_NUM_CHECKS || idx >= V6MW_NUM_CHECKS || location_checks[idx]) {
         vlog_warn("V6MW: Something funky is happening...");
         return;
     }
     location_checks[idx] = true;
-    vlog_info("V6MW: Checked Trinket %d. Informing Archipelago...", idx);
+    std::string out("V6MW: Checked ");
+    out += map_location_id_name[idx];
+    vlog_info("%s. Informing Archipelago...", out.c_str());
     Json::Value req_t;
     req_t[0]["cmd"] = "LocationChecks";
     req_t[0]["locations"][0] = idx + 2515000;

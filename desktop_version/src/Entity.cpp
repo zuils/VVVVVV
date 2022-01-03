@@ -1522,7 +1522,8 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
 
         //Check if it's already been collected
         entity.para = meta1;
-        if (!INBOUNDS_ARR(meta1, V6MW_Locations()) || V6MW_Locations()[meta1]) return;
+        if (meta1 >= V6MW_NUM_CHECKS) return;
+        if (V6MW_Locations()[meta1]) return;
         break;
     case 10: //Savepoint
         entity.rule = 3;
