@@ -18,6 +18,11 @@
 
 #define ADD_TO_MSGQUEUE(x,y) messageQueue.push(std::pair<std::string,int>(x,y))
 
+#define SET_PLAYER_POS(x,y) obj.entities[obj.getplayer()].xp = (x) * 8; \
+                obj.entities[obj.getplayer()].yp = ((y) * 8) - obj.entities[obj.getplayer()].h; \
+                obj.entities[obj.getplayer()].lerpoldxp = obj.entities[obj.getplayer()].xp; \
+                obj.entities[obj.getplayer()].lerpoldyp = obj.entities[obj.getplayer()].yp; \
+
 bool init = false;
 bool auth = false;
 int v6mw_player_id;
@@ -25,8 +30,9 @@ std::string v6mw_player_name;
 std::string v6mw_ip;
 std::string v6mw_passwd;
 int v6mw_uuid = 0;
-int trinketsCollected = 0;
-int trinketsPending = 0;
+bool trinketsCollected[V6MW_NUM_CHECKS];
+bool trinketsPending[V6MW_NUM_CHECKS];
+int door_unlock_cost = 0;
 bool deathlinkstat = false;
 bool enable_deathlink = false;
 int deathlink_amnesty = 0;
@@ -83,9 +89,11 @@ void V6MW_Init(std::string ip, std::string player_name, std::string passwd) {
         }
     );
 
-    //Initialize checked locations
+    //Initialize checked locations, collected and pending trinkets
     for (int i = 0; i < V6MW_NUM_CHECKS; i++) {
         location_checks[i] = false;
+        trinketsCollected[i] = false;
+        trinketsPending[i] = false;
     }
 
     init = true;
@@ -93,14 +101,12 @@ void V6MW_Init(std::string ip, std::string player_name, std::string passwd) {
 }
 
 void V6MW_SendItem(int idx) {
-    if (trinketsCollected > V6MW_NUM_CHECKS || idx >= V6MW_NUM_CHECKS || location_checks[idx]) {
+    if (idx >= V6MW_NUM_CHECKS || location_checks[idx] || !auth) {
         vlog_warn("V6MW: Something funky is happening...");
         return;
     }
     location_checks[idx] = true;
-    std::string out("V6MW: Checked ");
-    out += map_location_id_name[idx];
-    vlog_info("%s. Informing Archipelago...", out.c_str());
+    vlog_info(("V6MW: Checked " + map_location_id_name.at(idx + 2515000) + ". Informing Archipelago...").c_str());
     Json::Value req_t;
     req_t[0]["cmd"] = "LocationChecks";
     req_t[0]["locations"][0] = idx + 2515000;
@@ -108,12 +114,21 @@ void V6MW_SendItem(int idx) {
 }
 
 bool V6MW_RecvItem() {
-    return trinketsPending > 0;
+    for (int i = 0; i < V6MW_NUM_CHECKS; i++) {
+        if (trinketsPending[i]) return true;
+    }
+    return false;
 }
 
 void V6MW_RecvClear() {
-    trinketsPending = trinketsPending <= 0 ? 0 : trinketsPending-1;
-    trinketsCollected++;
+    int i = 0;
+    for (; i < V6MW_NUM_CHECKS; i++) {
+        if (trinketsPending[i]) {
+            trinketsPending[i] = false;
+            break;
+        }
+    }
+    trinketsCollected[i] = true;
 }
 
 void V6MW_StoryComplete() {
@@ -126,7 +141,11 @@ void V6MW_StoryComplete() {
 }
 
 int V6MW_GetTrinkets() {
-    return trinketsCollected;
+    int c = 0;
+    for (int i = 0; i < V6MW_NUM_CHECKS; i++) {
+        if (trinketsCollected[i]) c++;
+    }
+    return c;
 }
 
 bool V6MW_DeathLinkRecv() {
@@ -154,6 +173,90 @@ void V6MW_DeathLinkSend() {
     }
 }
 
+const bool* V6MW_Locations() {
+    return location_checks;
+}
+
+const bool* V6MW_Trinkets() {
+    return trinketsCollected;
+}
+
+void V6MW_PrintNext() {
+    if (messageQueue.empty()) return;
+    graphics.createtextbox(messageQueue.front().first, -7, -7, 174, 174, 174);
+    int amount = messageQueue.front().second;
+    messageQueue.pop();
+    for (int i = 0; i < amount; i++) {
+        graphics.addline(messageQueue.front().first);
+        messageQueue.pop();
+    }
+    graphics.textboxtimer(60);
+}
+
+bool V6MW_RoomAvailable(int x, int y) {
+    if (!auth) return false;
+    if (door_unlock_cost == 0) return true;
+    switch (x) {
+        case 102:
+            if (y == 116 && game.roomx == 101 && game.roomy == 116) { //Get Ready to Bounce (Entrance Laboratory)
+                for (int i = 0; i < door_unlock_cost; i++) {
+                    if (!trinketsCollected[i]) {
+                        ADD_TO_MSGQUEUE("You need Trinkets", 2);
+                        ADD_TO_MSGQUEUE(std::to_string(1) + " through " + std::to_string(door_unlock_cost), 1);
+                        ADD_TO_MSGQUEUE("to continue here", 0);
+                        SET_PLAYER_POS(36, 16);
+                        return false;
+                    }
+                }
+                return true;
+            }
+        break;
+        case 108:
+            if (y == 109 && game.roomx == 107 && game.roomy == 109) { //Teleporter Divot (Entrance Tower)
+                for (int i = door_unlock_cost; i < door_unlock_cost*2; i++) {
+                    if (!trinketsCollected[i]) {
+                        ADD_TO_MSGQUEUE("You need Trinkets", 2);
+                        ADD_TO_MSGQUEUE(std::to_string(door_unlock_cost+1) + " through " + std::to_string(door_unlock_cost*2), 1);
+                        ADD_TO_MSGQUEUE("to continue here", 0);
+                        SET_PLAYER_POS(36, 20);
+                        return false;
+                    }
+                }
+                return true;
+            }
+        break;
+        case 111:
+            if (y == 113 && game.roomx == 111 && game.roomy == 114) { //Something filter? (Entrance Space Station 2)
+                for (int i = door_unlock_cost*2; i < door_unlock_cost*3; i++) {
+                    if (!trinketsCollected[i]) {
+                        ADD_TO_MSGQUEUE("You need Trinkets", 2);
+                        ADD_TO_MSGQUEUE(std::to_string(door_unlock_cost*2+1) + " through " + std::to_string(door_unlock_cost*3), 1);
+                        ADD_TO_MSGQUEUE("to continue here", 0);
+                        SET_PLAYER_POS(15, 10);
+                        return false;
+                    }
+                }
+                return true;
+            }
+        break;
+        case 114:
+            if (y == 101 && game.roomx == 113 && game.roomy == 101) { // This is how it is (Entrance Warp Zone)
+                for (int i = door_unlock_cost*3; i < door_unlock_cost*4; i++) {
+                    if (!trinketsCollected[i]) {
+                        ADD_TO_MSGQUEUE("You need Trinkets", 2);
+                        ADD_TO_MSGQUEUE(std::to_string(door_unlock_cost*3+1) + " through " + std::to_string(door_unlock_cost*4), 1);
+                        ADD_TO_MSGQUEUE("to continue here", 0);
+                        SET_PLAYER_POS(35, 11);
+                        return false;
+                    }
+                }
+                return true;
+            }
+        break;
+    }
+    return true;
+}
+
 bool parse_response(std::string msg, std::string &request) {
     Json::Value root;
     reader.parse(msg, root);
@@ -179,10 +282,10 @@ bool parse_response(std::string msg, std::string &request) {
             }
         } else if (!strcmp(cmd,"Connected")) {
             // Avoid inconsistency if we disconnected before
-            trinketsCollected = 0;
-            trinketsPending = 0;
             for (int i = 0; i < V6MW_NUM_CHECKS; i++) {
                 location_checks[i] = false;
+                trinketsCollected[i] = false;
+                trinketsPending[i] = false;
             }
 
             vlog_info("V6MW: Authenticated");
@@ -201,6 +304,8 @@ bool parse_response(std::string msg, std::string &request) {
             deathlink_amnesty = root[i]["slot_data"]["DeathLink_Amnesty"].asInt();
             cur_deathlink_amnesty = deathlink_amnesty;
             if (enable_deathlink) vlog_info("V6MW: Enabled DeathLink.");
+            door_unlock_cost = root[i]["slot_data"]["DoorCost"].asInt();
+            if (door_unlock_cost > 0) vlog_info("V6MW: Enabled locked doors.");
             Json::Value req_t;
             req_t[0]["cmd"] = "GetDataPackage";
             request = writer.write(req_t);
@@ -246,7 +351,10 @@ bool parse_response(std::string msg, std::string &request) {
         } else if (!strcmp(cmd, "LocationInfo")) {
             //Uninteresting for now.
         } else if (!strcmp(cmd, "ReceivedItems")) {
-            trinketsPending += root[i]["items"].size();
+            for (unsigned int j = 0; j < root[i]["items"].size(); j++) {
+                int item_id = root[i]["items"][j]["item"].asInt() - 2515000;
+                trinketsPending[item_id] = true;
+            }
         } else if (!strcmp(cmd, "RoomUpdate")) {
             for (unsigned int j = 0; j < root[i]["checked_locations"].size(); j++) {
                 //Sync checks with server
@@ -284,20 +392,4 @@ bool parse_response(std::string msg, std::string &request) {
 void APSend(std::string req) {
     vlog_debug("V6MW: Sending %s", req.c_str());
     webSocket.send(req);
-}
-
-const bool* V6MW_Locations() {
-    return location_checks;
-}
-
-void V6MW_PrintNext() {
-    if (messageQueue.empty()) return;
-    graphics.createtextbox(messageQueue.front().first, -7, -7, 174, 174, 174);
-    int amount = messageQueue.front().second;
-    messageQueue.pop();
-    for (int i = 0; i < amount; i++) {
-        graphics.addline(messageQueue.front().first);
-        messageQueue.pop();
-    }
-    graphics.textboxtimer(60);
 }
