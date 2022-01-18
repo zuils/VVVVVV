@@ -76,7 +76,8 @@ endif()
 
 # Source Lists
 set(VVV_SRC
-    src/Archipelago.cpp
+    src/v6ap.cpp
+    src/v6ap.h
     src/BinaryBlob.cpp
     src/BlockV.cpp
     src/Ent.cpp
@@ -146,8 +147,7 @@ if(BUNDLE_DEPENDENCIES)
         ../third_party/physfs/extras
         ../third_party/lodepng
         ../third_party/utfcpp/source
-        ../third_party/IXWebSocket
-        ../third_party/jsoncpp/include
+        ../third_party/APCpp
     )
 else()
     target_include_directories(
@@ -159,9 +159,7 @@ else()
 endif()
 
 # Required for WebSocket connection
-add_subdirectory(../third_party/IXWebSocket ixwebout)
-# Required for Message Parsing
-add_subdirectory(../third_party/jsoncpp jsoncppout)
+add_subdirectory(../third_party/APCpp apcppout)
 
 if(MAKEANDPLAY)
     target_compile_definitions(VVVVVV PRIVATE -DMAKEANDPLAY)
@@ -306,7 +304,7 @@ if(BUNDLE_DEPENDENCIES)
         set_property(TARGET physfs-static PROPERTY C_EXTENSIONS ON)
     endif()
 
-    target_link_libraries(VVVVVV physfs-static tinyxml2-static lodepng-static ixwebsocket jsoncpp_static)
+    target_link_libraries(VVVVVV physfs-static tinyxml2-static lodepng-static APCpp)
 else()
     find_package(utf8cpp CONFIG)
 

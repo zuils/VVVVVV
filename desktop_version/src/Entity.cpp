@@ -3,7 +3,7 @@
 
 #include <SDL.h>
 
-#include "Archipelago.h"
+#include "v6ap.h"
 #include "CustomLevels.h"
 #include "Game.h"
 #include "GlitchrunnerMode.h"
@@ -1522,8 +1522,8 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
 
         //Check if it's already been collected
         entity.para = meta1;
-        if (meta1 >= V6MW_NUM_CHECKS) return;
-        if (V6MW_Locations()[meta1]) return;
+        if (meta1 >= V6AP_NUM_CHECKS) return;
+        if (V6AP_Locations()[meta1]) return;
         break;
     case 10: //Savepoint
         entity.rule = 3;
@@ -2653,7 +2653,7 @@ bool entityclass::updateentities( int i )
             //wait for collision
             if (entities[i].state == 1)
             {
-                V6MW_SendItem(entities[i].para);
+                V6AP_SendItem(entities[i].para);
                 if (game.trinkets() > game.stat_trinkets && !map.custommode)
                 {
                     game.stat_trinkets = game.trinkets();

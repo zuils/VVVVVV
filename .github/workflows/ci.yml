@@ -33,7 +33,7 @@ jobs:
     - name: Create Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: v6mw-macos
+        name: V6AP-macos
         path: ${{env.SRC_DIR_PATH}}/build/VVVVVV
 
   build-lin:
@@ -62,7 +62,7 @@ jobs:
     - name: Create Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: v6mw-linux
+        name: V6AP-linux
         path: ${{env.SRC_DIR_PATH}}/build/VVVVVV
 
   build-win:
@@ -99,6 +99,6 @@ jobs:
     - name: Create Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: v6mw-win
+        name: V6AP-win
         path: ${{env.SRC_DIR_PATH}}/build/Release/VVVVVV.exe
 

@@ -1,6 +1,6 @@
 [submodule "third_party/jsoncpp"]
 	path = third_party/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp
-[submodule "third_party/IXWebSocket"]
-	path = third_party/IXWebSocket
-	url = https://github.com/machinezone/IXWebSocket
+[submodule "third_party/APCpp"]
+	path = third_party/APCpp
+	url = https://github.com/N00byKing/APCpp

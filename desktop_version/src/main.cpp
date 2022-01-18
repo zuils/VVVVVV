@@ -4,7 +4,7 @@
 #include <emscripten/html5.h>
 #endif
 
-#include "Archipelago.h"
+#include "v6ap.h"
 #include "CustomLevels.h"
 #include "DeferCallbacks.h"
 #include "Editor.h"
@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
     char* baseDir = NULL;
     char* assetsPath = NULL;
 
-    //V6MW
+    //V6AP
     std::string ip, name, passwd;
 
     vlog_init();
@@ -474,19 +474,19 @@ int main(int argc, char *argv[])
         {
             vlog_toggle_error(0);
         }
-        else if (ARG("-v6mw_name"))
+        else if (ARG("-v6ap_name"))
         {
             ARG_INNER({
                 name = argv[i+1]; i++;
             })
         }
-        else if (ARG("-v6mw_ip"))
+        else if (ARG("-v6ap_ip"))
         {
             ARG_INNER({
                 ip = argv[i+1]; i++;
             })
         }
-        else if (ARG("-v6mw_passwd"))
+        else if (ARG("-v6ap_passwd"))
         {
             ARG_INNER({
                 passwd = argv[i+1]; i++;
@@ -502,7 +502,7 @@ int main(int argc, char *argv[])
     }
 
     if (name == "" || ip == "") {
-        vlog_error("V6MW: Name or IP unset. Exiting");
+        vlog_error("V6AP: Name or IP unset. Exiting");
         VVV_exit(1);
     }
 
@@ -566,7 +566,7 @@ int main(int argc, char *argv[])
 
     game.init();
 
-    V6MW_Init(ip,name,passwd);
+    V6AP_Init(ip.c_str(),name.c_str(),passwd.c_str());
 
     // This loads music too...
     if (!graphics.reloadresources())

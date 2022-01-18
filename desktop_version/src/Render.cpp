@@ -1,7 +1,7 @@
 #include <SDL.h>
 #include <string>
 
-#include "Archipelago.h"
+#include "v6ap.h"
 #include "Constants.h"
 #include "Credits.h"
 #include "CustomLevels.h"
@@ -2223,7 +2223,7 @@ void maprender(void)
 
           if(map.showtrinkets){
             for(size_t i=0; i<map.shinytrinkets.size(); i++){
-              if(!V6MW_Locations()[i]){
+              if(!V6AP_Locations()[i]){
                 int temp = 1086;
                 if(graphics.flipmode) temp += 3;
                 if(map.customzoom==4){
@@ -2317,7 +2317,7 @@ void maprender(void)
             {
                 for (size_t i = 0; i < map.shinytrinkets.size(); i++)
                 {
-                    if (!V6MW_Locations()[i])
+                    if (!V6AP_Locations()[i])
                     {
                         int temp = 1086;
                         if (graphics.flipmode) temp += 3;
@@ -2503,9 +2503,9 @@ void maprender(void)
 
         std::string out("(");
         int c = 0;
-        for (int i = 0; i < V6MW_NUM_CHECKS; i++) {
-            if (V6MW_Trinkets()[i]) {
-                if (c < V6MW_GetTrinkets()-1) {
+        for (int i = 0; i < V6AP_NUM_CHECKS; i++) {
+            if (V6AP_Trinkets()[i]) {
+                if (c < V6AP_GetTrinkets()-1) {
                     out += std::to_string(i+1) + ",";
                     c++;
                 } else {
@@ -2818,7 +2818,7 @@ void teleporterrender(void)
     {
         for (size_t i = 0; i < map.shinytrinkets.size(); i++)
         {
-            if (!V6MW_Locations()[i])
+            if (!V6AP_Locations()[i])
             {
                 temp = 1086;
                 if (graphics.flipmode) temp += 3;

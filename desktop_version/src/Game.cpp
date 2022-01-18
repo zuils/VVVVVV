@@ -6,7 +6,7 @@
 #include <string.h>
 #include <tinyxml2.h>
 
-#include "Archipelago.h"
+#include "v6ap.h"
 #include "Constants.h"
 #include "CustomLevels.h"
 #include "DeferCallbacks.h"
@@ -740,10 +740,10 @@ void Game::updatestate(void)
                 hascontrol = true;
                 completestop = false;
 
-                if (V6MW_RecvItem()) { //Receive Items from Archipelago
+                if (V6AP_ItemPending()) { //Receive Items from Archipelago
                     state = 1000;
                 } else { // If not, we can show the next message
-                    V6MW_PrintNext();
+                    V6AP_PrintNext();
                 }
             }
             break;
@@ -1882,7 +1882,7 @@ void Game::updatestate(void)
                 music.fadeMusicVolumeIn(3000);
             }
             graphics.showcutscenebars = false;
-            V6MW_RecvClear(); // Clear one item
+            V6AP_RecvClear(); // Clear one item
             break;
 
         case 1010:
@@ -2602,7 +2602,7 @@ void Game::updatestate(void)
         case 3501:
             //Game complete!
             unlockAchievement("vvvvvvgamecomplete");
-            V6MW_StoryComplete();
+            V6AP_StoryComplete();
             unlocknum(5);
             crewstats[0] = true;
             state++;
@@ -6637,7 +6637,7 @@ void Game::resetgameclock(void)
 
 int Game::trinkets(void)
 {
-    return V6MW_GetTrinkets();
+    return V6AP_GetTrinkets();
 }
 
 int Game::crewmates(void)

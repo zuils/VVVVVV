@@ -1,7 +1,7 @@
 #define MAP_DEFINITION
 #include "Map.h"
 
-#include "Archipelago.h"
+#include "v6ap.h"
 #include "Constants.h"
 #include "CustomLevels.h"
 #include "Entity.h"
@@ -912,7 +912,7 @@ void mapclass::warpto(int rx, int ry , int t, int tx, int ty)
 
 void mapclass::gotoroom(int rx, int ry)
 {
-    if (!V6MW_RoomAvailable(rx,ry)) {
+    if (!V6AP_RoomAvailable(rx,ry)) {
         return;
     }
 

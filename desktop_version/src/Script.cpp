@@ -4,7 +4,7 @@
 #include <limits.h>
 #include <SDL_timer.h>
 
-#include "Archipelago.h"
+#include "v6ap.h"
 #include "CustomLevels.h"
 #include "Editor.h"
 #include "Entity.h"
@@ -1704,7 +1704,7 @@ void scriptclass::run(void)
             {
                 size_t trinket = ss_toi(words[1]);
                 if (trinket == 18) {
-                    V6MW_SendItem(18); //NPC Trinket gets special case
+                    V6AP_SendItem(18); //NPC Trinket gets special case
                 }
 
                 if (!game.backgroundtext)
