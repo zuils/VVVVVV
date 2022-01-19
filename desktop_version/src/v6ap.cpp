@@ -22,6 +22,10 @@ void V6AP_RecvItem(int);
 void V6AP_CheckLocation(int);
 void none() {}
 
+void V6AP_SetDoorCost(int cost) {
+    door_unlock_cost = cost;
+}
+
 void V6AP_ResetItems() {
     for (int i = 0; i < V6AP_NUM_CHECKS; i++) {
         location_checks[i] = false;
@@ -40,6 +44,7 @@ void V6AP_Init(const char* ip, const char* player_name, const char* passwd) {
     AP_SetItemClearCallback(&V6AP_ResetItems);
     AP_SetItemRecvCallback(&V6AP_RecvItem);
     AP_SetLocationCheckedCallback(&V6AP_CheckLocation);
+    AP_RegisterSlotDataIntCallback("DoorCost", &V6AP_SetDoorCost);
     AP_SetDeathLinkRecvCallback(&none);
     AP_Start();
 }
