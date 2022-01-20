@@ -102,7 +102,7 @@ jobs:
       run: |
         mkdir artifact
         copy ${{env.SRC_DIR_PATH}}/build/Release/VVVVVV.exe artifact
-        copy ${{env.SRC_DIR_PATH}}/build/bin/Release/APCpp.dll artifact
+        copy ${{env.SRC_DIR_PATH}}/build/apcppout/Release/APCpp.dll artifact
     - name: Create Build Artifact
       uses: actions/upload-artifact@v2
       with:
