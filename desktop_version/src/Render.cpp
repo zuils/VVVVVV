@@ -2501,21 +2501,23 @@ void maprender(void)
         graphics.Print(0, FLIP(52, 8), "[Trinkets found]", 196, 196, 255 - help.glow, true);
         graphics.Print(0, FLIP(64, 8), help.number_words(game.trinkets()) + " out of " + help.number_words(total), 96, 96, 96, true);
 
-        std::string out("(");
-        int c = 0;
-        for (int i = 0; i < V6AP_NUM_CHECKS; i++) {
-            if (V6AP_Trinkets()[i]) {
-                if (c < V6AP_GetTrinkets()-1) {
-                    out += std::to_string(i+1) + ",";
-                    c++;
-                } else {
-                    out += std::to_string(i+1) + ")";
-                    c++;
-                    break;
+        if(V6AP_GetTrinkets() > 0) {
+            std::string out("(");
+            int c = 0;
+            for (int i = 0; i < V6AP_NUM_CHECKS; i++) {
+                if (V6AP_Trinkets()[i]) {
+                    if (c < V6AP_GetTrinkets()-1) {
+                        out += std::to_string(i+1) + ",";
+                        c++;
+                    } else {
+                        out += std::to_string(i+1) + ")";
+                        c++;
+                        break;
+                    }
                 }
             }
+            graphics.Print(0, FLIP(76, 8), out, 96, 96, 96, true);
         }
-        graphics.Print(0, FLIP(76, 8), out, 96, 96, 96, true);
 
         graphics.Print(0, FLIP(102, 8), "[Number of Deaths]", 196, 196, 255 - help.glow, true);
         graphics.Print(0, FLIP(114, 8), help.String(game.deathcounts), 96, 96, 96, true);
