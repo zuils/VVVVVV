@@ -41,6 +41,7 @@ void V6AP_Init(const char* ip, const char* player_name, const char* passwd) {
 
     AP_Init(ip, "VVVVVV", player_name, passwd);
     AP_SetDeathLinkSupported(true);
+    AP_EnableQueueItemRecvMsgs(false);
     AP_SetItemClearCallback(&V6AP_ResetItems);
     AP_SetItemRecvCallback(&V6AP_RecvItem);
     AP_SetLocationCheckedCallback(&V6AP_CheckLocation);
