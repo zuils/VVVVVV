@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
     char* assetsPath = NULL;
 
     //V6AP
-    std::string ip, name, passwd;
+    std::string ip = "", name, passwd;
 
     vlog_init();
 
@@ -501,8 +501,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (name == "" || ip == "") {
-        vlog_error("V6AP: Name or IP unset. Exiting");
+    if (name == "") {
+        vlog_error("V6AP: Name unset. Exiting");
         VVV_exit(1);
     }
 
