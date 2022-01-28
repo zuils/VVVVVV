@@ -912,9 +912,7 @@ void mapclass::warpto(int rx, int ry , int t, int tx, int ty)
 
 void mapclass::gotoroom(int rx, int ry)
 {
-    if (!V6AP_RoomAvailable(rx,ry)) {
-        return;
-    }
+    V6AP_RoomAvailable(&rx,&ry);
 
     int roomchangedir;
     std::vector<entclass> linecrosskludge;
