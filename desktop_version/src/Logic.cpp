@@ -353,7 +353,7 @@ void gamelogic(void)
 
     graphics.kludgeswnlinewidth = false;
 
-    if (game.deathseq != -1 || V6AP_DeathLinkPending())
+    if (game.deathseq != -1 || (V6AP_DeathLinkPending() && game.state == 0))
     {
 
         if (V6AP_DeathLinkPending() && game.deathseq == -1) { // They died
