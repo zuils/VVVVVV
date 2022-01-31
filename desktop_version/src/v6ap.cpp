@@ -241,23 +241,25 @@ void V6AP_AdjustRoom(int *x, int *y, int area, bool isExit) {
 
 void V6AP_RoomAvailable(int* x, int* y) {
     int entrance = V6AP_PlayerIsEnteringArea(*x, *y);
-    if (door_unlock_cost == 0 || entrance == -1) {
+    if (entrance == -1) {
         int exit = V6AP_PlayerIsLeavingArea(*x, *y);
         if (V6AP_PlayerIsLeavingArea(*x, *y) > 0) {
             V6AP_AdjustRoom(x, y, map_exits.at(exit), true);
         }
         return;
     }
-    for (int i = door_unlock_cost*(entrance-1); i < door_unlock_cost*entrance; i++) {
-        if (!trinketsCollected[i]) {
-            std::vector<std::string> msg;
-            msg.push_back("You need Trinkets");
-            msg.push_back(std::to_string((door_unlock_cost*(entrance-1))+1) + " through " + std::to_string(door_unlock_cost*entrance));
-            msg.push_back("to continue here");
-            printMsg(msg);
-            V6AP_AdjustRoom(x, y, entrance, true);
-            return;
-        }
+    if (door_unlock_cost != 0) {
+        for (int i = door_unlock_cost*(entrance-1); i < door_unlock_cost*entrance; i++) {
+            if (!trinketsCollected[i]) {
+                std::vector<std::string> msg;
+                msg.push_back("You need Trinkets");
+                msg.push_back(std::to_string((door_unlock_cost*(entrance-1))+1) + " through " + std::to_string(door_unlock_cost*entrance));
+                msg.push_back("to continue here");
+                printMsg(msg);
+                V6AP_AdjustRoom(x, y, entrance, true);
+                return;
+            }
+        }    
     }
     V6AP_AdjustRoom(x, y, map_entrances.at(entrance), false);
     return;
