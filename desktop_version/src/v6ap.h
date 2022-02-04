@@ -51,6 +51,9 @@ const bool* V6AP_Trinkets();
 // Called when Story completed, sends StatusUpdate
 void V6AP_StoryComplete();
 
+// For music rando
+void V6AP_AdjustMusic(int*);
+
 // Check if accessible under current MultiWorld ruleset, if not resets player position to safe value
 // If Area Rando is on and the Room is available it will redirect the Room switch to the correct entrance
 void V6AP_RoomAvailable(int*,int*);

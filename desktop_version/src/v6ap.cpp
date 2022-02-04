@@ -17,6 +17,8 @@ bool location_checks[V6AP_NUM_CHECKS];
 std::map<int,int> map_entrances;
 std::map<int,int> map_exits;
 
+std::map<int,int> map_music;
+
 void V6AP_RecvItem(int);
 void V6AP_CheckLocation(int);
 void none() {}
@@ -33,6 +35,10 @@ void V6AP_SetAreaMap(std::map<int,int> map) {
     for (int i = 0; i < map.size(); i++) {
         map_exits[map_entrances.at(i)] = i;
     }
+}
+
+void V6AP_SetMusicMap(std::map<int,int> map) {
+    map_music = map;
 }
 
 void V6AP_ResetItems() {
@@ -57,6 +63,7 @@ void V6AP_Init(const char* ip, const char* player_name, const char* passwd) {
     AP_SetLocationCheckedCallback(&V6AP_CheckLocation);
     AP_RegisterSlotDataIntCallback("DoorCost", &V6AP_SetDoorCost);
     AP_RegisterSlotDataMapIntIntCallback("AreaRando", &V6AP_SetAreaMap);
+    AP_RegisterSlotDataMapIntIntCallback("MusicRando", &V6AP_SetMusicMap);
     AP_SetDeathLinkRecvCallback(&none);
 
     AP_Start();
@@ -144,6 +151,9 @@ void V6AP_PrintNext() {
     AP_ClearLatestMessage();
 }
 
+void V6AP_AdjustMusic(int* x) {
+    *x = map_music.at(*x);
+}
 
 int V6AP_PlayerIsEnteringArea(int x, int y) {
     switch (x) {
