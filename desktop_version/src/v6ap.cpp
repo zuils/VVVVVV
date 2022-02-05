@@ -17,6 +17,8 @@ bool location_checks[V6AP_NUM_CHECKS];
 std::map<int,int> map_entrances;
 std::map<int,int> map_exits;
 
+std::map<int,int> map_costs;
+
 std::map<int,int> map_music;
 
 void V6AP_RecvItem(int);
@@ -28,9 +30,6 @@ void V6AP_SetDoorCost(int cost) {
 }
 
 void V6AP_SetAreaMap(std::map<int,int> map) {
-    for (int i = 0; i < map.size(); i++) {
-        vlog_debug("Mapped %d to %d", i, map.at(i));
-    }
     map_entrances = map;
     for (int i = 0; i < map.size(); i++) {
         map_exits[map_entrances.at(i)] = i;
@@ -39,6 +38,10 @@ void V6AP_SetAreaMap(std::map<int,int> map) {
 
 void V6AP_SetMusicMap(std::map<int,int> map) {
     map_music = map;
+}
+
+void V6AP_SetCostMap(std::map<int,int> map) {
+    map_costs = map;
 }
 
 void V6AP_ResetItems() {
@@ -63,6 +66,7 @@ void V6AP_Init(const char* ip, const char* player_name, const char* passwd) {
     AP_SetLocationCheckedCallback(&V6AP_CheckLocation);
     AP_RegisterSlotDataIntCallback("DoorCost", &V6AP_SetDoorCost);
     AP_RegisterSlotDataMapIntIntCallback("AreaRando", &V6AP_SetAreaMap);
+    AP_RegisterSlotDataMapIntIntCallback("AreaCostRando", &V6AP_SetCostMap);
     AP_RegisterSlotDataMapIntIntCallback("MusicRando", &V6AP_SetMusicMap);
     AP_SetDeathLinkRecvCallback(&none);
 
@@ -86,7 +90,11 @@ bool V6AP_ItemPending() {
 }
 
 void V6AP_RecvItem(int item_id) {
-    trinketsPending[item_id - V6AP_ID_OFFSET] = true;
+    switch(item_id) {
+        default:
+            trinketsPending[item_id - V6AP_ID_OFFSET] = true;
+            break;
+    }
 }
 
 void V6AP_CheckLocation(int loc_id) {
@@ -161,24 +169,24 @@ int V6AP_PlayerIsEnteringArea(int x, int y) {
             if (y == 116 && game.roomx == 101 && game.roomy == 116) { //Get Ready to Bounce (Entrance Laboratory)
                 return Areas::Laboratory;
             }
-        break;
+            break;
         case 108:
             if (y == 109 && game.roomx == 107 && game.roomy == 109) { //Teleporter Divot (Entrance Tower)
                 return Areas::TheTower;
             }
-        break;
+            break;
         case 111:
             if (y == 113 && game.roomx == 111 && game.roomy == 114) { //Something filter? (Entrance Space Station 2)
                 return Areas::SpaceStation2;
             }
-        break;
+            break;
         case 114:
             if (y == 101 && game.roomx == 113 && game.roomy == 101) { // This is how it is (Entrance Warp Zone)
                 return Areas::WarpZone;
             }
-        break;
+            break;
     }
-    return -1;
+    return Areas::None;
 }
 
 int V6AP_PlayerIsLeavingArea(int x, int y) {
@@ -187,24 +195,24 @@ int V6AP_PlayerIsLeavingArea(int x, int y) {
             if (game.roomy == 116 && x == 101 && y == 116) { //Get Ready to Bounce (Entrance Laboratory)
                 return Areas::Laboratory;
             }
-        break;
+            break;
         case 108:
             if (game.roomy == 109 && x == 107 && y == 109) { //Teleporter Divot (Entrance Tower)
                 return Areas::TheTower;
             }
-        break;
+            break;
         case 111:
             if (game.roomy == 113 && x == 111 && y == 114) { //Something filter? (Entrance Space Station 2)
                 return Areas::SpaceStation2;
             }
-        break;
+            break;
         case 114:
             if (game.roomy == 101 && x == 113 && y == 101) { // This is how it is (Entrance Warp Zone)
                 return Areas::WarpZone;
             }
-        break;
+            break;
     }
-    return -1;
+    return Areas::None;
 }
 
 void V6AP_AdjustRoom(int *x, int *y, int area, bool isExit) {
@@ -251,19 +259,18 @@ void V6AP_AdjustRoom(int *x, int *y, int area, bool isExit) {
 
 void V6AP_RoomAvailable(int* x, int* y) {
     int entrance = V6AP_PlayerIsEnteringArea(*x, *y);
-    if (entrance == -1) {
+    if (entrance == Areas::None) {
         int exit = V6AP_PlayerIsLeavingArea(*x, *y);
-        if (V6AP_PlayerIsLeavingArea(*x, *y) > 0) {
-            V6AP_AdjustRoom(x, y, map_exits.at(exit), true);
-        }
+        V6AP_AdjustRoom(x, y, map_exits.at(exit), true);
         return;
     }
     if (door_unlock_cost != 0) {
-        for (int i = door_unlock_cost*(entrance-1); i < door_unlock_cost*entrance; i++) {
+        int cost_entrance = map_costs.at(entrance);
+        for (int i = door_unlock_cost*(cost_entrance-1); i < door_unlock_cost*cost_entrance; i++) {
             if (!trinketsCollected[i]) {
                 std::vector<std::string> msg;
                 msg.push_back("You need Trinkets");
-                msg.push_back(std::to_string((door_unlock_cost*(entrance-1))+1) + " through " + std::to_string(door_unlock_cost*entrance));
+                msg.push_back(std::to_string((door_unlock_cost*(cost_entrance-1))+1) + " through " + std::to_string(door_unlock_cost*cost_entrance));
                 msg.push_back("to continue here");
                 printMsg(msg);
                 V6AP_AdjustRoom(x, y, entrance, true);
