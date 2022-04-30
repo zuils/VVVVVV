@@ -951,10 +951,6 @@ void mapclass::gotoroom(int rx, int ry)
 
         if (!player_found)
         {
-            obj.entities.erase(obj.entities.begin() + i);
-        }
-        else
-        {
             obj.disableentity(i);
         }
     }

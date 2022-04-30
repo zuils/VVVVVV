@@ -5,6 +5,9 @@
 #include "Vlogging.h"
 #include "Entity.h"
 
+#include <json/value.h>
+#include <json/writer.h>
+#include <json/reader.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -23,7 +26,14 @@ std::map<int,int> map_music;
 
 void V6AP_RecvItem(int,bool);
 void V6AP_CheckLocation(int);
-void none() {}
+
+//Multiplayer Stuff
+std::map<std::string,V6Player> mp_dudes;
+Json::FastWriter writer; //Needed for SetRaw. Protocols are hard...
+Json::Reader reader;
+AP_GetServerDataRequest allpresencerequest;
+std::string raw_allpresence;
+bool mpreg = false;
 
 void V6AP_SetDoorCost(int cost) {
     door_unlock_cost = cost;
@@ -62,19 +72,17 @@ void V6AP_GenericInit() {
     AP_RegisterSlotDataMapIntIntCallback("AreaRando", &V6AP_SetAreaMap);
     AP_RegisterSlotDataMapIntIntCallback("AreaCostRando", &V6AP_SetCostMap);
     AP_RegisterSlotDataMapIntIntCallback("MusicRando", &V6AP_SetMusicMap);
-    AP_SetDeathLinkRecvCallback(&none);
+    AP_Start();
 }
 
 void V6AP_Init(const char* ip, const char* player_name, const char* passwd) {
     AP_Init(ip, "VVVVVV", player_name, passwd);
     V6AP_GenericInit();
-    AP_Start();
 }
 
 void V6AP_Init(const char* filename) {
     AP_Init(filename);
     V6AP_GenericInit();
-    AP_Start();
 }
 
 void V6AP_SendItem(int idx) {
@@ -285,4 +293,73 @@ void V6AP_RoomAvailable(int* x, int* y) {
     }
     V6AP_AdjustRoom(x, y, map_entrances.at(entrance), false);
     return;
+}
+
+void V6AP_MPUpdatePos(int roomx, int roomy, int playerx, int playery) {
+    if (!mpreg) {
+        mpreg = true;
+        Json::Value val;
+        val = Json::arrayValue;
+        val[0] = AP_GetUUID();
+        AP_SetServerDataRaw("AllPresenceV6", "add", writer.write(val), writer.write(Json::arrayValue));
+        return;
+    }
+
+    Json::Value newpos;
+    newpos["roomX"] = roomx;
+    newpos["roomY"] = roomy;
+    newpos["playerX"] = playerx;
+    newpos["playerY"] = playery;
+    newpos["flipped"] = game.gravitycontrol;
+    AP_SetServerDataRaw("PresenceV6" + std::to_string(AP_GetUUID()), "replace", writer.write(newpos), writer.write(Json::objectValue));
+
+    if (allpresencerequest.status == AP_RequestStatus::Done) {
+        Json::Value allpresence;
+        reader.parse(raw_allpresence, allpresence);
+        vlog_info(raw_allpresence.c_str());
+        raw_allpresence.clear();
+        for(auto itr : allpresence) {
+            if (itr.asString() == std::to_string(AP_GetUUID())) {
+                continue;
+            }
+            if (mp_dudes[itr.asString()].request.status == AP_RequestStatus::Done) {
+                Json::Value otherdude;
+                reader.parse(mp_dudes[itr.asString()].data, otherdude);
+                if (otherdude != Json::nullValue) {
+                    if (!(otherdude["roomX"].asInt() == roomx && otherdude["roomY"].asInt() == roomy)) {
+                        if (mp_dudes[itr.asString()].entity != 0) {
+                            obj.entities[mp_dudes[itr.asString()].entity].invis = true;
+                        }
+                        continue;
+                    }
+                    if (mp_dudes[itr.asString()].entity == 0) {
+                        mp_dudes[itr.asString()].entity = obj.entities.size();
+                        obj.entities.push_back(entclass());
+                        obj.entities[mp_dudes[itr.asString()].entity].type = 12;
+                        obj.entities[mp_dudes[itr.asString()].entity].colour = 25;
+                        obj.entities[mp_dudes[itr.asString()].entity].gravity = false;
+                        obj.entities[mp_dudes[itr.asString()].entity].rule = 7;
+                        obj.entities[mp_dudes[itr.asString()].entity].ismpcrew = true;
+                        obj.entities[mp_dudes[itr.asString()].entity].lerpoldxp = otherdude["playerX"].asInt();
+                        obj.entities[mp_dudes[itr.asString()].entity].lerpoldyp = otherdude["playerY"].asInt();
+                    }
+                    obj.entities[mp_dudes[itr.asString()].entity].invis = false;
+                    obj.entities[mp_dudes[itr.asString()].entity].tile = 144+(otherdude["flipped"].asBool() ? 6 : 0);
+                    obj.entities[mp_dudes[itr.asString()].entity].xp = otherdude["playerX"].asInt();
+                    obj.entities[mp_dudes[itr.asString()].entity].yp = otherdude["playerY"].asInt();
+                }
+            }
+            mp_dudes[itr.asString()].request.key = "PresenceV6" + itr.asString();
+            mp_dudes[itr.asString()].request.data = &mp_dudes[itr.asString()].data;
+            mp_dudes[itr.asString()].request.type = AP_DataType::Raw;
+            AP_GetServerData(&mp_dudes[itr.asString()].request);
+        }
+    }
+
+    allpresencerequest.type = AP_DataType::Raw;
+    allpresencerequest.data = &raw_allpresence;
+    allpresencerequest.key = "AllPresenceV6";
+
+    AP_GetServerData(&allpresencerequest);
+    graphics.render();
 }

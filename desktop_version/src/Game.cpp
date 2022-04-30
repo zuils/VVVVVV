@@ -714,6 +714,8 @@ void Game::savetele_textbox(void)
 
 void Game::updatestate(void)
 {
+    int player = obj.getplayer();
+    V6AP_MPUpdatePos(roomx, roomy, obj.entities[player].xp, obj.entities[player].yp);
     statedelay--;
     if(statedelay<=0){
         statedelay=0;

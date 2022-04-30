@@ -55,6 +55,9 @@ public:
 
     Uint32 realcol;
     int lerpoldxp, lerpoldyp;
+
+    //V6AP
+    bool ismpcrew = false;
 };
 
 #endif /* ENT_H */

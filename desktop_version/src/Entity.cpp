@@ -1117,6 +1117,10 @@ bool entityclass::disableentity(int t)
         /* Don't disable the player entity! */
         return false;
     }
+    if (entities[t].ismpcrew) {
+        /* Don't disable ANY player entity */
+        return false;
+    }
 
     entities[t].invis = true;
     entities[t].size = -1;
@@ -2149,6 +2153,8 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
         }
         updateentities(indice);
     }
+
+    return;
 }
 
 void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int p1, int p2)

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include "Archipelago.h"
+
 #define V6AP_NUM_CHECKS 20
 #define V6AP_NUM_LOCKS 4
 
@@ -21,6 +24,12 @@
 
 enum Areas {
     None, Laboratory, TheTower, SpaceStation2, WarpZone
+};
+
+struct V6Player {
+    AP_GetServerDataRequest request;
+    int entity = 0;
+    std::string data;
 };
 
 void V6AP_Init(const char*, const char*, const char*);
@@ -58,3 +67,5 @@ void V6AP_AdjustMusic(int*);
 // Check if accessible under current MultiWorld ruleset, if not resets player position to safe value
 // If Area Rando is on and the Room is available it will redirect the Room switch to the correct entrance
 void V6AP_RoomAvailable(int*,int*);
+
+void V6AP_MPUpdatePos(int, int, int, int);
