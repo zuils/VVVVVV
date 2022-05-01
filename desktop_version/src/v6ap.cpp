@@ -326,42 +326,39 @@ void V6AP_MPUpdatePos(int roomx, int roomy, int playerx, int playery) {
                 Json::Value otherdude;
                 reader.parse(mp_dudes[itr.asString()].data, otherdude);
                 if (otherdude != Json::nullValue) {
+                    vlog_info("%s Data: %s", itr.asString().c_str(), mp_dudes[itr.asString()].data.c_str());
                     if (!(otherdude["roomX"].asInt() == roomx && otherdude["roomY"].asInt() == roomy)) {
                         if (mp_dudes[itr.asString()].entity != 0) {
                             obj.entities[mp_dudes[itr.asString()].entity].invis = true;
                         }
-                        continue;
+                    } else {
+                        if (mp_dudes[itr.asString()].entity == 0) {
+                            mp_dudes[itr.asString()].entity = obj.entities.size();
+                            obj.entities.push_back(entclass());
+                            obj.entities[mp_dudes[itr.asString()].entity].type = 12;
+                            obj.entities[mp_dudes[itr.asString()].entity].colour = 25;
+                            obj.entities[mp_dudes[itr.asString()].entity].gravity = false;
+                            obj.entities[mp_dudes[itr.asString()].entity].rule = 7;
+                            obj.entities[mp_dudes[itr.asString()].entity].ismpcrew = true;
+                            obj.entities[mp_dudes[itr.asString()].entity].lerpoldxp = otherdude["playerX"].asInt();
+                            obj.entities[mp_dudes[itr.asString()].entity].lerpoldyp = otherdude["playerY"].asInt();
+                        }
+                        obj.entities[mp_dudes[itr.asString()].entity].invis = false;
+                        obj.entities[mp_dudes[itr.asString()].entity].tile = 144+(otherdude["flipped"].asBool() ? 6 : 0);
+                        obj.entities[mp_dudes[itr.asString()].entity].xp = otherdude["playerX"].asInt();
+                        obj.entities[mp_dudes[itr.asString()].entity].yp = otherdude["playerY"].asInt();
                     }
-                    if (mp_dudes[itr.asString()].entity == 0) {
-                        mp_dudes[itr.asString()].entity = obj.entities.size();
-                        obj.entities.push_back(entclass());
-                        obj.entities[mp_dudes[itr.asString()].entity].type = 12;
-                        obj.entities[mp_dudes[itr.asString()].entity].colour = 25;
-                        obj.entities[mp_dudes[itr.asString()].entity].gravity = false;
-                        obj.entities[mp_dudes[itr.asString()].entity].rule = 7;
-                        obj.entities[mp_dudes[itr.asString()].entity].ismpcrew = true;
-                        obj.entities[mp_dudes[itr.asString()].entity].lerpoldxp = otherdude["playerX"].asInt();
-                        obj.entities[mp_dudes[itr.asString()].entity].lerpoldyp = otherdude["playerY"].asInt();
-                    }
-                    obj.entities[mp_dudes[itr.asString()].entity].invis = false;
-                    obj.entities[mp_dudes[itr.asString()].entity].tile = 144+(otherdude["flipped"].asBool() ? 6 : 0);
-                    obj.entities[mp_dudes[itr.asString()].entity].xp = otherdude["playerX"].asInt();
-                    obj.entities[mp_dudes[itr.asString()].entity].yp = otherdude["playerY"].asInt();
                 }
             }
-            if (mp_dudes[itr.asString()].request.status != AP_RequestStatus::Pending) {
-                mp_dudes[itr.asString()].request.key = "PresenceV6" + itr.asString();
-                mp_dudes[itr.asString()].request.data = &mp_dudes[itr.asString()].data;
-                mp_dudes[itr.asString()].request.type = AP_DataType::Raw;
-                AP_GetServerData(&mp_dudes[itr.asString()].request);
-            }
+            mp_dudes[itr.asString()].request.key = "PresenceV6" + itr.asString();
+            mp_dudes[itr.asString()].request.data = &mp_dudes[itr.asString()].data;
+            mp_dudes[itr.asString()].request.type = AP_DataType::Raw;
+            AP_GetServerData(&mp_dudes[itr.asString()].request);
         }
     }
 
-    if (allpresencerequest.status != AP_RequestStatus::Pending) {
-        allpresencerequest.type = AP_DataType::Raw;
-        allpresencerequest.data = &raw_allpresence;
-        allpresencerequest.key = "AllPresenceV6";
-        AP_GetServerData(&allpresencerequest);
-    }
+    allpresencerequest.type = AP_DataType::Raw;
+    allpresencerequest.data = &raw_allpresence;
+    allpresencerequest.key = "AllPresenceV6";
+    AP_GetServerData(&allpresencerequest);
 }
