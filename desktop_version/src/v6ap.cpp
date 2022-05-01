@@ -356,10 +356,10 @@ void V6AP_MPUpdatePos(int roomx, int roomy, int playerx, int playery) {
         }
     }
 
-    allpresencerequest.type = AP_DataType::Raw;
-    allpresencerequest.data = &raw_allpresence;
-    allpresencerequest.key = "AllPresenceV6";
-
-    AP_GetServerData(&allpresencerequest);
-    graphics.render();
+    if (allpresencerequest.status != AP_RequestStatus::Pending) {
+        allpresencerequest.type = AP_DataType::Raw;
+        allpresencerequest.data = &raw_allpresence;
+        allpresencerequest.key = "AllPresenceV6";
+        AP_GetServerData(&allpresencerequest);
+    }
 }
