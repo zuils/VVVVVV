@@ -349,10 +349,12 @@ void V6AP_MPUpdatePos(int roomx, int roomy, int playerx, int playery) {
                     obj.entities[mp_dudes[itr.asString()].entity].yp = otherdude["playerY"].asInt();
                 }
             }
-            mp_dudes[itr.asString()].request.key = "PresenceV6" + itr.asString();
-            mp_dudes[itr.asString()].request.data = &mp_dudes[itr.asString()].data;
-            mp_dudes[itr.asString()].request.type = AP_DataType::Raw;
-            AP_GetServerData(&mp_dudes[itr.asString()].request);
+            if (mp_dudes[itr.asString()].request.status != AP_RequestStatus::Pending) {
+                mp_dudes[itr.asString()].request.key = "PresenceV6" + itr.asString();
+                mp_dudes[itr.asString()].request.data = &mp_dudes[itr.asString()].data;
+                mp_dudes[itr.asString()].request.type = AP_DataType::Raw;
+                AP_GetServerData(&mp_dudes[itr.asString()].request);
+            }
         }
     }
 
