@@ -311,7 +311,7 @@ void V6AP_MPUpdatePos(int roomx, int roomy, int playerx, int playery) {
     newpos["playerX"] = playerx;
     newpos["playerY"] = playery;
     newpos["flipped"] = game.gravitycontrol;
-    AP_SetServerDataRaw("PresenceV6" + std::to_string(AP_GetUUID()), "replace", writer.write(newpos), writer.write(Json::objectValue));
+    AP_SetServerDataRaw("PresenceV6" + std::to_string(AP_GetUUID()), "replace", writer.write(newpos), "");
 
     if (allpresencerequest.status == AP_RequestStatus::Done) {
         Json::Value allpresence;
