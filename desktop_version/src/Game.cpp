@@ -715,7 +715,6 @@ void Game::savetele_textbox(void)
 void Game::updatestate(void)
 {
     int player = obj.getplayer();
-    V6AP_MPUpdatePos(roomx, roomy, obj.entities[player].xp, obj.entities[player].yp);
     statedelay--;
     if(statedelay<=0){
         statedelay=0;
@@ -742,6 +741,7 @@ void Game::updatestate(void)
                 hascontrol = true;
                 completestop = false;
 
+                V6AP_MPUpdatePos(roomx, roomy, obj.entities[player].xp, obj.entities[player].yp);
                 if (V6AP_ItemPending()) { //Receive Items from Archipelago
                     state = 1000;
                 } else { // If not, we can show the next message
