@@ -316,9 +316,8 @@ void V6AP_MPUpdatePos(int roomx, int roomy, int playerx, int playery) {
     if (allpresencerequest.status == AP_RequestStatus::Done) {
         Json::Value allpresence;
         reader.parse(raw_allpresence, allpresence);
-        vlog_info(raw_allpresence.c_str());
         raw_allpresence.clear();
-        for(auto itr : allpresence) {
+        for(Json::Value itr : allpresence) {
             if (itr.asString() == std::to_string(AP_GetUUID())) {
                 continue;
             }
@@ -326,7 +325,6 @@ void V6AP_MPUpdatePos(int roomx, int roomy, int playerx, int playery) {
                 Json::Value otherdude;
                 reader.parse(mp_dudes[itr.asString()].data, otherdude);
                 if (otherdude != Json::nullValue) {
-                    vlog_info("%s Data: %s", itr.asString().c_str(), mp_dudes[itr.asString()].data.c_str());
                     if (!(otherdude["roomX"].asInt() == roomx && otherdude["roomY"].asInt() == roomy)) {
                         if (mp_dudes[itr.asString()].entity != 0) {
                             obj.entities[mp_dudes[itr.asString()].entity].invis = true;
@@ -338,8 +336,13 @@ void V6AP_MPUpdatePos(int roomx, int roomy, int playerx, int playery) {
                             obj.entities[mp_dudes[itr.asString()].entity].type = 12;
                             obj.entities[mp_dudes[itr.asString()].entity].colour = 25;
                             obj.entities[mp_dudes[itr.asString()].entity].gravity = false;
-                            obj.entities[mp_dudes[itr.asString()].entity].rule = 7;
+                            obj.entities[mp_dudes[itr.asString()].entity].rule = 6;
                             obj.entities[mp_dudes[itr.asString()].entity].ismpcrew = true;
+                            obj.entities[mp_dudes[itr.asString()].entity].lerpoldxp = otherdude["playerX"].asInt();
+                            obj.entities[mp_dudes[itr.asString()].entity].lerpoldyp = otherdude["playerY"].asInt();
+                        }
+                        if (obj.entities[mp_dudes[itr.asString()].entity].invis) {
+                            // Invisible before probably means they/we just switched room. Teleport 'em
                             obj.entities[mp_dudes[itr.asString()].entity].lerpoldxp = otherdude["playerX"].asInt();
                             obj.entities[mp_dudes[itr.asString()].entity].lerpoldyp = otherdude["playerY"].asInt();
                         }
