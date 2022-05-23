@@ -87,6 +87,7 @@ void V6AP_SendItem(int idx) {
 }
 
 bool V6AP_ItemPending() {
+    printf("Status: %d\n", AP_GetConnectionStatus());
     for (int i = 0; i < V6AP_NUM_CHECKS; i++) {
         if (trinketsPending[i]) return true;
     }
