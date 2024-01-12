@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <sstream>
 
 bool trinketsCollected[V6AP_NUM_CHECKS];
 bool trinketsPending[V6AP_NUM_CHECKS];
